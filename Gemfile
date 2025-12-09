@@ -72,4 +72,4 @@ gem 'dotenv', groups: [:development, :test]
 gem 'httparty'
 gem 'clerk-sdk-ruby', require: "clerk"
 gem 'pagy', '~> 43.2'
-
+gem "rails_event_store", "~> 2.17.1"
