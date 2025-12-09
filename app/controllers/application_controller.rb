@@ -3,6 +3,7 @@ require 'uri'
 
 class ApplicationController < ActionController::Base
   include Clerk::Authenticatable if defined?(Clerk::Authenticatable)
+  include Pagy::Method
   helper_method :current_clerk_user_id, :clerk_signed_in?
 
   ALLOWED_SIGNIN_HOSTS = (ENV.fetch('CLERK_ALLOWED_SIGNIN_HOSTS', '')).split(',').map(&:strip).reject(&:empty?)

@@ -71,3 +71,5 @@ gem 'dotenv', groups: [:development, :test]
 
 gem 'httparty'
 gem 'clerk-sdk-ruby', require: "clerk"
+gem 'pagy', '~> 43.2'
+
