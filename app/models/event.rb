@@ -3,7 +3,9 @@ class Event < ApplicationRecord
   validates :title, presence: true
 
   scope :published, -> { where(published_state: 'published') }
-  scope :upcoming, -> { where('starts_at >= ?', Time.current).order(starts_at: :asc) }
+  scope :upcoming_first, -> {
+    order(Arel.sql("CASE WHEN starts_at IS NULL OR starts_at < NOW() THEN 1 ELSE 0 END, starts_at ASC NULLS LAST"))
+  }
  
   def organiser_name
     organiser && (organiser['name'] || organiser['title'])
