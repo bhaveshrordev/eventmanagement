@@ -10,8 +10,32 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 0) do
+ActiveRecord::Schema[7.1].define(version: 2025_12_09_080800) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
+
+  create_table "events", force: :cascade do |t|
+    t.string "external_id", null: false
+    t.string "title", null: false
+    t.text "description"
+    t.datetime "starts_at"
+    t.datetime "ends_at"
+    t.string "image_url"
+    t.string "url"
+    t.string "branded_url"
+    t.boolean "availability", default: true
+    t.string "published_state"
+    t.string "object_kind"
+    t.jsonb "organiser"
+    t.jsonb "minimum_price"
+    t.jsonb "categorization"
+    t.jsonb "location"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["availability"], name: "index_events_on_availability"
+    t.index ["external_id"], name: "index_events_on_external_id", unique: true
+    t.index ["location"], name: "index_events_on_location", using: :gin
+    t.index ["starts_at"], name: "index_events_on_starts_at"
+  end
 
 end
