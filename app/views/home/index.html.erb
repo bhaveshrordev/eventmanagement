@@ -25,7 +25,7 @@
   <div class="row row-cols-1 row-cols-md-3 g-4">
     <% @events.each do |event| %>
       <%# Fetch tally for this event (association or fallback) %>
-      <% tally = event.respond_to?(:event_vote) ? event.event_vote : EventVoteTally.find_by(event_id: event.id) %>
+      <% tally = EventVoteTally.find_by(event_id: event.id) %>
       <% up_count   = tally&.upvotes_count   || 0 %>
       <% down_count = tally&.downvotes_count || 0 %>
 
