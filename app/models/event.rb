@@ -2,6 +2,9 @@ class Event < ApplicationRecord
   validates :external_id, presence: true, uniqueness: true
   validates :title, presence: true
 
+  has_one :event_vote
+  has_one :event_vote_tally
+
   scope :published, -> { where(published_state: 'published') }
   scope :upcoming_first, -> {
     order(Arel.sql("CASE WHEN starts_at IS NULL OR starts_at < NOW() THEN 1 ELSE 0 END, starts_at ASC NULLS LAST"))
