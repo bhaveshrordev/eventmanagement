@@ -192,7 +192,9 @@ config/
 
 ## 🖼 Screenshots
 
-(Add images here when ready)
+![Login Page](app/assets/images/event_voting.png)
+
+![Event Page](app/assets/images/event_voting2.png)
 
 ---
 
