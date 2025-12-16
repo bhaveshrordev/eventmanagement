@@ -74,6 +74,13 @@ module Billetto
       http.use_ssl = true
       http.read_timeout = 20
       http.open_timeout = 5
+
+      if Rails.env.development?
+        http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+      else
+        http.verify_mode = OpenSSL::SSL::VERIFY_PEER
+      end
+
       http.request(request)
     end
 
