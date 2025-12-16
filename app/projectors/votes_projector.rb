@@ -1,67 +1,71 @@
-# app/projectors/votes_projector.rb
 class VotesProjector
   def call(event)
     case event
     when EventUpvoted
-      apply_upvote(event)
+      apply_vote(event, to: "up")
     when EventDownvoted
-      apply_downvote(event)
+      apply_vote(event, to: "down")
     end
   end
 
   private
 
-  def apply_upvote(res_event)
-    data = res_event.data
-    event_id = data['event_id']
-    user_id = data['user_id']
-    vote = data['vote'] # 'up' ideally
+  def apply_vote(res_event, to:)
+    data     = res_event.data
+    event_id = data["event_id"]
+    user_id  = data["user_id"]
 
     ActiveRecord::Base.transaction do
-      ev = EventVote.lock.find_by(event_id: event_id, user_id: user_id)
+      vote = EventVote.lock.find_by(event_id: event_id, user_id: user_id)
 
-      if ev.nil?
-        # create new vote
-        EventVote.create!(event_id: event_id, user_id: user_id, vote: 'up', metadata: data)
-        tally = EventVoteTally.lock.find_or_initialize_by(event_id: event_id)
-        tally.upvotes_count = (tally.upvotes_count || 0) + 1
-        tally.save!
-      elsif ev.vote == 'down'
-        # change vote from down -> up
-        ev.update!(vote: 'up', metadata: data)
-        tally = EventVoteTally.lock.find_or_initialize_by(event_id: event_id)
-        tally.downvotes_count = (tally.downvotes_count || 0) - 1
-        tally.upvotes_count   = (tally.upvotes_count   || 0) + 1
-        tally.save!
-      else
-        # already upvoted; ignore (idempotent)
+      if vote.nil?
+        create_vote(event_id, user_id, to, data)
+        update_tally(event_id, from: nil, to: to)
+        return
       end
+
+      return if vote.vote == to
+
+      from = vote.vote
+
+      vote.update!(vote: to, metadata: data)
+      update_tally(event_id, from: from, to: to)
     end
   end
 
-  def apply_downvote(res_event)
-    data = res_event.data
-    event_id = data['event_id']
-    user_id = data['user_id']
-    vote = data['vote']
+  def create_vote(event_id, user_id, vote, metadata)
+    EventVote.create!(
+      event_id: event_id,
+      user_id: user_id,
+      vote: vote,
+      metadata: metadata
+    )
+  end
 
-    ActiveRecord::Base.transaction do
-      ev = EventVote.lock.find_by(event_id: event_id, user_id: user_id)
+  def update_tally(event_id, from:, to:)
+    tally = EventVoteTally.lock.find_or_initialize_by(event_id: event_id)
 
-      if ev.nil?
-        EventVote.create!(event_id: event_id, user_id: user_id, vote: 'down', metadata: data)
-        tally = EventVoteTally.lock.find_or_initialize_by(event_id: event_id)
-        tally.downvotes_count = (tally.downvotes_count || 0) + 1
-        tally.save!
-      elsif ev.vote == 'up'
-        ev.update!(vote: 'down', metadata: data)
-        tally = EventVoteTally.lock.find_or_initialize_by(event_id: event_id)
-        tally.upvotes_count   = (tally.upvotes_count   || 0) - 1
-        tally.downvotes_count = (tally.downvotes_count || 0) + 1
-        tally.save!
-      else
-        # already downvoted; ignore
-      end
+    decrement(tally, from) if from
+    increment(tally, to)
+
+    tally.save!
+  end
+
+  def increment(tally, vote)
+    case vote
+    when "up"
+      tally.upvotes_count = tally.upvotes_count.to_i + 1
+    when "down"
+      tally.downvotes_count = tally.downvotes_count.to_i + 1
+    end
+  end
+
+  def decrement(tally, vote)
+    case vote
+    when "up"
+      tally.upvotes_count = tally.upvotes_count.to_i - 1
+    when "down"
+      tally.downvotes_count = tally.downvotes_count.to_i - 1
     end
   end
 end
