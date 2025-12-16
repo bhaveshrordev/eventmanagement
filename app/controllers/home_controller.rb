@@ -3,7 +3,7 @@ class HomeController < ApplicationController
   before_action :set_event, only: %i[vote]
 
   def index
-    @pagy, @events = pagy(:offset, Event.upcoming_first)
+    @pagy, @events = pagy(:offset, Event.upcoming_first.includes(:event_vote_tally))
 
     begin
       try_process_pending_vote
